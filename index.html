@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Image Toolkit</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --surface2: #1c1c28;
+    --border: #2a2a3a;
+    --accent: #7c6aff;
+    --accent2: #ff6a9b;
+    --accent3: #6affda;
+    --text: #f0f0f8;
+    --muted: #7070a0;
+    --success: #4ade80;
+    --radius: 16px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(124,106,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124,106,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Glow orbs */
+  .orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.15;
+  }
+  .orb1 { width: 500px; height: 500px; background: var(--accent); top: -150px; left: -100px; }
+  .orb2 { width: 400px; height: 400px; background: var(--accent2); bottom: -100px; right: -100px; }
+  .orb3 { width: 300px; height: 300px; background: var(--accent3); top: 50%; left: 50%; transform: translate(-50%,-50%); }
+
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  header {
+    padding: 32px 0 0;
+    text-align: center;
+  }
+
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 32px;
+  }
+
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+
+  .logo-text {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: -0.3px;
+  }
+
+  .hero-title {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(36px, 6vw, 64px);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -2px;
+    margin-bottom: 16px;
+  }
+
+  .hero-title span {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .hero-sub {
+    color: var(--muted);
+    font-size: 17px;
+    font-weight: 300;
+    margin-bottom: 48px;
+    line-height: 1.6;
+  }
+
+  /* Tab Nav */
+  .tab-nav {
+    display: flex;
+    gap: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 6px;
+    margin-bottom: 40px;
+    overflow-x: auto;
+  }
+
+  .tab-btn {
+    flex: 1;
+    min-width: 120px;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+  }
+
+  .tab-btn:hover { color: var(--text); background: var(--surface2); }
+
+  .tab-btn.active {
+    background: linear-gradient(135deg, var(--accent), #9b5de5);
+    color: white;
+  }
+
+  .tab-icon { font-size: 16px; }
+
+  /* Panel */
+  .panel { display: none; animation: fadeIn 0.3s ease; }
+  .panel.active { display: block; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Card */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px;
+    margin-bottom: 20px;
+  }
+
+  .card-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .card-desc {
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 28px;
+    line-height: 1.6;
+  }
+
+  /* Upload Zone */
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 48px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    background: var(--surface2);
+  }
+
+  .upload-zone:hover, .upload-zone.dragover {
+    border-color: var(--accent);
+    background: rgba(124,106,255,0.05);
+  }
+
+  .upload-zone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+
+  .upload-icon { font-size: 40px; margin-bottom: 12px; }
+
+  .upload-title {
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 6px;
+  }
+
+  .upload-hint { color: var(--muted); font-size: 13px; }
+
+  .upload-preview {
+    display: none;
+    margin-top: 16px;
+    position: relative;
+  }
+
+  .upload-preview img {
+    max-height: 200px;
+    border-radius: 10px;
+    object-fit: contain;
+  }
+
+  .preview-name {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+
+  /* Settings */
+  .settings {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+    margin: 24px 0;
+  }
+
+  .setting-item label {
+    display: block;
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+
+  .setting-item input[type="range"] {
+    width: 100%;
+    accent-color: var(--accent);
+  }
+
+  .setting-item select,
+  .setting-item input[type="text"] {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 12px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .setting-item select:focus,
+  .setting-item input[type="text"]:focus {
+    border-color: var(--accent);
+  }
+
+  .range-val {
+    font-size: 13px;
+    color: var(--accent);
+    font-weight: 500;
+    float: right;
+  }
+
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+  }
+
+  .toggle-row span { font-size: 14px; }
+
+  .toggle {
+    position: relative;
+    width: 36px; height: 20px;
+  }
+
+  .toggle input { opacity: 0; width: 0; height: 0; }
+
+  .toggle-slider {
+    position: absolute;
+    inset: 0;
+    background: var(--border);
+    border-radius: 20px;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+
+  .toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 14px; height: 14px;
+    left: 3px; top: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: 0.2s;
+  }
+
+  .toggle input:checked + .toggle-slider { background: var(--accent); }
+  .toggle input:checked + .toggle-slider::before { transform: translateX(16px); }
+
+  /* Execute Button */
+  .execute-btn {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(135deg, var(--accent), #9b5de5);
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 24px;
+    letter-spacing: 0.3px;
+  }
+
+  .execute-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(124,106,255,0.35); }
+  .execute-btn:active { transform: translateY(0); }
+  .execute-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .spinner {
+    width: 18px; height: 18px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: none;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Result */
+  .result-card {
+    background: var(--surface);
+    border: 1px solid var(--success);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-top: 20px;
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .result-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .result-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--success);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .download-btn {
+    padding: 8px 18px;
+    background: var(--success);
+    border: none;
+    border-radius: 8px;
+    color: #000;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+
+  .download-btn:hover { background: #6ee88a; }
+
+  .result-img {
+    width: 100%;
+    max-height: 400px;
+    object-fit: contain;
+    border-radius: 10px;
+    background: repeating-conic-gradient(#1c1c28 0% 25%, #232330 0% 50%) 0 0 / 20px 20px;
+  }
+
+  /* OCR result */
+  .ocr-output {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    line-height: 1.8;
+    white-space: pre-wrap;
+    max-height: 300px;
+    overflow-y: auto;
+    color: var(--text);
+  }
+
+  .ocr-meta {
+    display: flex;
+    gap: 16px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+
+  .meta-pill {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .meta-pill span { color: var(--accent); font-weight: 600; }
+
+  /* Error */
+  .error-card {
+    background: rgba(239,68,68,0.1);
+    border: 1px solid rgba(239,68,68,0.3);
+    border-radius: 10px;
+    padding: 14px 16px;
+    color: #f87171;
+    font-size: 14px;
+    margin-top: 16px;
+    display: none;
+  }
+
+  /* Footer */
+  footer {
+    text-align: center;
+    padding: 40px 0 32px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--surface); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="orb orb3"></div>
+
+<div class="container">
+  <header>
+    <div class="logo">
+      <div class="logo-icon">🤖</div>
+      <span class="logo-text">AI Image Toolkit</span>
+    </div>
+    <h1 class="hero-title">Process Images<br>with <span>AI Power</span></h1>
+    <p class="hero-sub">Background removal · Enhancement · Smart crop · Multilingual OCR</p>
+  </header>
+
+  <!-- Tab Nav -->
+  <div class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('bg')">
+      <span class="tab-icon">🖼️</span> Background
+    </button>
+    <button class="tab-btn" onclick="switchTab('enhance')">
+      <span class="tab-icon">✨</span> Enhance
+    </button>
+    <button class="tab-btn" onclick="switchTab('crop')">
+      <span class="tab-icon">✂️</span> Smart Crop
+    </button>
+    <button class="tab-btn" onclick="switchTab('ocr')">
+      <span class="tab-icon">🔤</span> OCR
+    </button>
+  </div>
+
+  <!-- BG Removal -->
+  <div class="panel active" id="panel-bg">
+    <div class="card">
+      <div class="card-title">Background Removal</div>
+      <div class="card-desc">Upload any photo — AI will remove the background and give you a clean transparent PNG.</div>
+
+      <div class="upload-zone" id="drop-bg">
+        <input type="file" id="file-bg" accept="image/*" onchange="previewFile('bg')">
+        <div class="upload-icon">📁</div>
+        <div class="upload-title">Drop your image here</div>
+        <div class="upload-hint">or click to browse · JPG, PNG, WEBP</div>
+      </div>
+      <div class="upload-preview" id="preview-bg">
+        <img id="preview-bg-img" src="" alt="preview">
+        <div class="preview-name" id="preview-bg-name"></div>
+      </div>
+
+      <div class="settings">
+        <div class="setting-item">
+          <label>Background Color</label>
+          <select id="bg-color">
+            <option value="transparent">Transparent (PNG)</option>
+            <option value="ffffff">White</option>
+            <option value="000000">Black</option>
+            <option value="f0f0f0">Light Gray</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="execute-btn" onclick="runBgRemoval()">
+        <div class="spinner" id="spin-bg"></div>
+        <span id="btn-bg-text">✦ Remove Background</span>
+      </button>
+    </div>
+
+    <div class="error-card" id="err-bg"></div>
+    <div class="result-card" id="result-bg">
+      <div class="result-header">
+        <div class="result-title">✓ Background Removed!</div>
+        <a class="download-btn" id="dl-bg" download="background_removed.png">⬇ Download PNG</a>
+      </div>
+      <img class="result-img" id="result-bg-img" src="" alt="result">
+    </div>
+  </div>
+
+  <!-- Enhancement -->
+  <div class="panel" id="panel-enhance">
+    <div class="card">
+      <div class="card-title">Image Enhancement</div>
+      <div class="card-desc">Improve image quality — reduce noise, adjust brightness, contrast and sharpness.</div>
+
+      <div class="upload-zone" id="drop-enhance">
+        <input type="file" id="file-enhance" accept="image/*" onchange="previewFile('enhance')">
+        <div class="upload-icon">📁</div>
+        <div class="upload-title">Drop your image here</div>
+        <div class="upload-hint">or click to browse · JPG, PNG, WEBP</div>
+      </div>
+      <div class="upload-preview" id="preview-enhance">
+        <img id="preview-enhance-img" src="" alt="preview">
+        <div class="preview-name" id="preview-enhance-name"></div>
+      </div>
+
+      <div class="settings">
+        <div class="setting-item">
+          <label>Brightness <span class="range-val" id="val-brightness">0</span></label>
+          <input type="range" id="brightness" min="-100" max="100" value="0" oninput="document.getElementById('val-brightness').textContent=this.value">
+        </div>
+        <div class="setting-item">
+          <label>Contrast <span class="range-val" id="val-contrast">1.0</span></label>
+          <input type="range" id="contrast" min="5" max="30" value="10" step="1" oninput="document.getElementById('val-contrast').textContent=(this.value/10).toFixed(1)">
+        </div>
+        <div class="setting-item">
+          <label>Denoise Strength <span class="range-val" id="val-denoise">10</span></label>
+          <input type="range" id="denoise-h" min="1" max="30" value="10" oninput="document.getElementById('val-denoise').textContent=this.value">
+        </div>
+        <div class="setting-item">
+          <label>Denoise</label>
+          <div class="toggle-row">
+            <span>Apply Denoising</span>
+            <label class="toggle"><input type="checkbox" id="denoise" checked><span class="toggle-slider"></span></label>
+          </div>
+        </div>
+        <div class="setting-item">
+          <label>Sharpen</label>
+          <div class="toggle-row">
+            <span>Apply Sharpening</span>
+            <label class="toggle"><input type="checkbox" id="sharpen"><span class="toggle-slider"></span></label>
+          </div>
+        </div>
+        <div class="setting-item">
+          <label>Auto White Balance</label>
+          <div class="toggle-row">
+            <span>Auto WB</span>
+            <label class="toggle"><input type="checkbox" id="auto-wb"><span class="toggle-slider"></span></label>
+          </div>
+        </div>
+      </div>
+
+      <button class="execute-btn" onclick="runEnhance()">
+        <div class="spinner" id="spin-enhance"></div>
+        <span id="btn-enhance-text">✦ Enhance Image</span>
+      </button>
+    </div>
+
+    <div class="error-card" id="err-enhance"></div>
+    <div class="result-card" id="result-enhance">
+      <div class="result-header">
+        <div class="result-title">✓ Image Enhanced!</div>
+        <a class="download-btn" id="dl-enhance" download="enhanced.jpg">⬇ Download</a>
+      </div>
+      <img class="result-img" id="result-enhance-img" src="" alt="result" style="background:none;">
+    </div>
+  </div>
+
+  <!-- Smart Crop -->
+  <div class="panel" id="panel-crop">
+    <div class="card">
+      <div class="card-title">Smart Crop</div>
+      <div class="card-desc">Automatically detects faces or objects and crops around them. Perfect for profile photos and thumbnails.</div>
+
+      <div class="upload-zone" id="drop-crop">
+        <input type="file" id="file-crop" accept="image/*" onchange="previewFile('crop')">
+        <div class="upload-icon">📁</div>
+        <div class="upload-title">Drop your image here</div>
+        <div class="upload-hint">or click to browse · JPG, PNG, WEBP</div>
+      </div>
+      <div class="upload-preview" id="preview-crop">
+        <img id="preview-crop-img" src="" alt="preview">
+        <div class="preview-name" id="preview-crop-name"></div>
+      </div>
+
+      <div class="settings">
+        <div class="setting-item">
+          <label>Crop Mode</label>
+          <select id="crop-mode">
+            <option value="face">Face Detection</option>
+            <option value="object">Object Detection</option>
+            <option value="center">Center Crop</option>
+          </select>
+        </div>
+        <div class="setting-item">
+          <label>Output Width (px)</label>
+          <input type="text" id="crop-width" value="512">
+        </div>
+        <div class="setting-item">
+          <label>Output Height (px)</label>
+          <input type="text" id="crop-height" value="512">
+        </div>
+        <div class="setting-item">
+          <label>Padding <span class="range-val" id="val-padding">0.25</span></label>
+          <input type="range" id="padding" min="0" max="100" value="25" oninput="document.getElementById('val-padding').textContent=(this.value/100).toFixed(2)">
+        </div>
+      </div>
+
+      <button class="execute-btn" onclick="runCrop()">
+        <div class="spinner" id="spin-crop"></div>
+        <span id="btn-crop-text">✦ Smart Crop</span>
+      </button>
+    </div>
+
+    <div class="error-card" id="err-crop"></div>
+    <div class="result-card" id="result-crop">
+      <div class="result-header">
+        <div class="result-title">✓ Image Cropped!</div>
+        <a class="download-btn" id="dl-crop" download="cropped.jpg">⬇ Download</a>
+      </div>
+      <img class="result-img" id="result-crop-img" src="" alt="result" style="background:none;">
+    </div>
+  </div>
+
+  <!-- OCR -->
+  <div class="panel" id="panel-ocr">
+    <div class="card">
+      <div class="card-title">OCR — Text Extraction</div>
+      <div class="card-desc">Extract text from any image. Supports English, Hindi, Marathi and 11 more Indian languages.</div>
+
+      <div class="upload-zone" id="drop-ocr">
+        <input type="file" id="file-ocr" accept="image/*" onchange="previewFile('ocr')">
+        <div class="upload-icon">📁</div>
+        <div class="upload-title">Drop your image here</div>
+        <div class="upload-hint">or click to browse · JPG, PNG, WEBP</div>
+      </div>
+      <div class="upload-preview" id="preview-ocr">
+        <img id="preview-ocr-img" src="" alt="preview">
+        <div class="preview-name" id="preview-ocr-name"></div>
+      </div>
+
+      <div class="settings">
+        <div class="setting-item">
+          <label>Language</label>
+          <select id="ocr-lang">
+            <option value="eng">English</option>
+            <option value="hin">Hindi</option>
+            <option value="mar">Marathi</option>
+            <option value="eng+hin">English + Hindi</option>
+            <option value="eng+mar">English + Marathi</option>
+            <option value="eng+hin+mar">English + Hindi + Marathi</option>
+            <option value="ben">Bengali</option>
+            <option value="guj">Gujarati</option>
+            <option value="kan">Kannada</option>
+            <option value="tam">Tamil</option>
+            <option value="tel">Telugu</option>
+            <option value="pan">Punjabi</option>
+          </select>
+        </div>
+        <div class="setting-item">
+          <label>Page Mode</label>
+          <select id="ocr-psm">
+            <option value="6">Block of text (default)</option>
+            <option value="3">Auto detect</option>
+            <option value="11">Sparse text</option>
+            <option value="4">Single column</option>
+          </select>
+        </div>
+        <div class="setting-item">
+          <label>Preprocessing</label>
+          <div class="toggle-row">
+            <span>Auto enhance for OCR</span>
+            <label class="toggle"><input type="checkbox" id="ocr-preprocess" checked><span class="toggle-slider"></span></label>
+          </div>
+        </div>
+      </div>
+
+      <button class="execute-btn" onclick="runOCR()">
+        <div class="spinner" id="spin-ocr"></div>
+        <span id="btn-ocr-text">✦ Extract Text</span>
+      </button>
+    </div>
+
+    <div class="error-card" id="err-ocr"></div>
+    <div class="result-card" id="result-ocr">
+      <div class="result-header">
+        <div class="result-title">✓ Text Extracted!</div>
+        <button class="download-btn" onclick="copyOCR()">📋 Copy Text</button>
+      </div>
+      <div class="ocr-output" id="ocr-text"></div>
+      <div class="ocr-meta" id="ocr-meta"></div>
+    </div>
+  </div>
+
+  <footer>Built with FastAPI · OpenCV · Tesseract · rembg &nbsp;·&nbsp; AI Image Intelligence Toolkit</footer>
+</div>
+
+<script>
+const API = 'http://localhost:8000';
+
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  document.getElementById('panel-' + name).classList.add('active');
+}
+
+function previewFile(id) {
+  const file = document.getElementById('file-' + id).files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('preview-' + id + '-img').src = e.target.result;
+    document.getElementById('preview-' + id + '-name').textContent = file.name + ' (' + (file.size/1024).toFixed(1) + ' KB)';
+    document.getElementById('preview-' + id).style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+function setLoading(id, loading) {
+  const spin = document.getElementById('spin-' + id);
+  const btn = document.getElementById('btn-' + id + '-text');
+  const btnEl = spin.parentElement;
+  spin.style.display = loading ? 'block' : 'none';
+  btnEl.disabled = loading;
+  if (loading) btn.textContent = 'Processing...';
+}
+
+function showError(id, msg) {
+  const el = document.getElementById('err-' + id);
+  el.textContent = '⚠ ' + msg;
+  el.style.display = 'block';
+  document.getElementById('result-' + id).style.display = 'none';
+}
+
+function hideError(id) {
+  document.getElementById('err-' + id).style.display = 'none';
+}
+
+// Background Removal
+async function runBgRemoval() {
+  const file = document.getElementById('file-bg').files[0];
+  if (!file) { showError('bg', 'Please select an image first!'); return; }
+  hideError('bg');
+  setLoading('bg', true);
+  const btnText = document.getElementById('btn-bg-text');
+
+  try {
+    const fd = new FormData();
+    fd.append('file', file);
+    const color = document.getElementById('bg-color').value;
+    const res = await fetch(`${API}/api/background/remove?bg_color=${color}`, { method: 'POST', body: fd });
+    if (!res.ok) throw new Error('Server error: ' + res.status);
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    document.getElementById('result-bg-img').src = url;
+    document.getElementById('dl-bg').href = url;
+    document.getElementById('result-bg').style.display = 'block';
+    document.getElementById('result-bg').scrollIntoView({ behavior: 'smooth' });
+  } catch(e) {
+    showError('bg', e.message);
+  } finally {
+    setLoading('bg', false);
+    btnText.textContent = '✦ Remove Background';
+  }
+}
+
+// Enhancement
+async function runEnhance() {
+  const file = document.getElementById('file-enhance').files[0];
+  if (!file) { showError('enhance', 'Please select an image first!'); return; }
+  hideError('enhance');
+  setLoading('enhance', true);
+  const btnText = document.getElementById('btn-enhance-text');
+
+  try {
+    const fd = new FormData();
+    fd.append('file', file);
+    const brightness = document.getElementById('brightness').value;
+    const contrast = (document.getElementById('contrast').value / 10).toFixed(1);
+    const denoiseH = document.getElementById('denoise-h').value;
+    const denoise = document.getElementById('denoise').checked;
+    const sharpen = document.getElementById('sharpen').checked;
+    const autoWb = document.getElementById('auto-wb').checked;
+
+    const url = `${API}/api/enhance/image?brightness=${brightness}&contrast=${contrast}&denoise_h=${denoiseH}&denoise=${denoise}&sharpen=${sharpen}&auto_wb=${autoWb}`;
+    const res = await fetch(url, { method: 'POST', body: fd });
+    if (!res.ok) throw new Error('Server error: ' + res.status);
+    const blob = await res.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    document.getElementById('result-enhance-img').src = blobUrl;
+    document.getElementById('dl-enhance').href = blobUrl;
+    document.getElementById('result-enhance').style.display = 'block';
+    document.getElementById('result-enhance').scrollIntoView({ behavior: 'smooth' });
+  } catch(e) {
+    showError('enhance', e.message);
+  } finally {
+    setLoading('enhance', false);
+    btnText.textContent = '✦ Enhance Image';
+  }
+}
+
+// Smart Crop
+async function runCrop() {
+  const file = document.getElementById('file-crop').files[0];
+  if (!file) { showError('crop', 'Please select an image first!'); return; }
+  hideError('crop');
+  setLoading('crop', true);
+  const btnText = document.getElementById('btn-crop-text');
+
+  try {
+    const fd = new FormData();
+    fd.append('file', file);
+    const mode = document.getElementById('crop-mode').value;
+    const w = document.getElementById('crop-width').value;
+    const h = document.getElementById('crop-height').value;
+    const padding = (document.getElementById('padding').value / 100).toFixed(2);
+
+    const url = `${API}/api/crop/smart?mode=${mode}&width=${w}&height=${h}&padding=${padding}`;
+    const res = await fetch(url, { method: 'POST', body: fd });
+    if (!res.ok) throw new Error('Server error: ' + res.status);
+    const blob = await res.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    document.getElementById('result-crop-img').src = blobUrl;
+    document.getElementById('dl-crop').href = blobUrl;
+    document.getElementById('result-crop').style.display = 'block';
+    document.getElementById('result-crop').scrollIntoView({ behavior: 'smooth' });
+  } catch(e) {
+    showError('crop', e.message);
+  } finally {
+    setLoading('crop', false);
+    btnText.textContent = '✦ Smart Crop';
+  }
+}
+
+// OCR
+async function runOCR() {
+  const file = document.getElementById('file-ocr').files[0];
+  if (!file) { showError('ocr', 'Please select an image first!'); return; }
+  hideError('ocr');
+  setLoading('ocr', true);
+  const btnText = document.getElementById('btn-ocr-text');
+
+  try {
+    const fd = new FormData();
+    fd.append('file', file);
+    const lang = document.getElementById('ocr-lang').value;
+    const psm = document.getElementById('ocr-psm').value;
+    const preprocess = document.getElementById('ocr-preprocess').checked;
+
+    const url = `${API}/api/ocr/extract?lang=${lang}&psm=${psm}&preprocess=${preprocess}`;
+    const res = await fetch(url, { method: 'POST', body: fd });
+    if (!res.ok) throw new Error('Server error: ' + res.status);
+    const data = await res.json();
+
+    document.getElementById('ocr-text').textContent = data.text || '(No text detected)';
+    document.getElementById('ocr-meta').innerHTML = `
+      <div class="meta-pill">Words: <span>${data.word_count}</span></div>
+      <div class="meta-pill">Language: <span>${data.language}</span></div>
+      ${data.avg_confidence ? `<div class="meta-pill">Confidence: <span>${data.avg_confidence}%</span></div>` : ''}
+      <div class="meta-pill">Size: <span>${data.image_info.width}×${data.image_info.height}</span></div>
+    `;
+    document.getElementById('result-ocr').style.display = 'block';
+    document.getElementById('result-ocr').scrollIntoView({ behavior: 'smooth' });
+  } catch(e) {
+    showError('ocr', e.message);
+  } finally {
+    setLoading('ocr', false);
+    btnText.textContent = '✦ Extract Text';
+  }
+}
+
+function copyOCR() {
+  const text = document.getElementById('ocr-text').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = event.currentTarget;
+    btn.textContent = '✓ Copied!';
+    setTimeout(() => btn.textContent = '📋 Copy Text', 2000);
+  });
+}
+
+// Drag and Drop
+['bg','enhance','crop','ocr'].forEach(id => {
+  const zone = document.getElementById('drop-' + id);
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      document.getElementById('file-' + id).files = e.dataTransfer.files;
+      previewFile(id);
+    }
+  });
+});
+</script>
+</body>
+</html>

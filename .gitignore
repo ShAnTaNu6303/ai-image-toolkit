@@ -1,0 +1,29 @@
+# Virtual environment
+venv/
+
+# Environment variables (API keys)
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# VS Code
+.vscode/
+
+# Downloaded AI models
+*.onnx
+*.pt
+*.pth
+u2net/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test outputs
+samples/*.png
+samples/*.jpg
