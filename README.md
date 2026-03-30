@@ -25,7 +25,7 @@ Background removal · Image enhancement · Smart cropping · Multilingual OCR ·
 
 | Before | After |
 |:---:|:---:|
-| ![Before](samples/bg_before.jpg) | ![After](samples/bg_after.png) |
+| ![Before](samples/bg%20_before_image.jpg) | ![After](samples/bg_after_image.png) |
 
 ---
 
@@ -34,7 +34,7 @@ Background removal · Image enhancement · Smart cropping · Multilingual OCR ·
 
 | Before | After |
 |:---:|:---:|
-| ![Before](samples/enhance_before.jpg) | ![After](samples/enhance_after.jpg) |
+| ![Before](samples/enhance_before_image.jpg) | ![After](samples/enhance_after_image.jpg) |
 
 ---
 
@@ -43,7 +43,7 @@ Background removal · Image enhancement · Smart cropping · Multilingual OCR ·
 
 | Input Image | Extracted Output |
 |:---:|:---:|
-| ![OCR Input](samples/ocr_input.png) | ![OCR Result](samples/ocr_result.png) |
+| ![OCR Input](samples/OCR_input_image.png) | ![OCR Result](samples/OCR_result_image.png) |
 
 ```
 BHARATI VIDYAPEETH (DEEMED TO BE UNIVERSITY)

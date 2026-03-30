@@ -23,7 +23,3 @@ u2net/
 # OS files
 .DS_Store
 Thumbs.db
-
-# Test outputs
-samples/*.png
-samples/*.jpg
